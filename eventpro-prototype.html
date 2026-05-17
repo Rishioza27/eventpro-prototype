@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventPro – Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #5b21b6;
+    --purple-dark: #3b0f8c;
+    --purple-light: #7c3aed;
+    --accent: #8b5cf6;
+    --bg: #f5f4ff;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --gray-light: #e5e7eb;
+    --gray-bg: #f9fafb;
+    --text: #111827;
+    --green: #10b981;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ---- TOP NAV (role switcher) ---- */
+  #role-bar {
+    background: var(--purple-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-family: 'Sora', sans-serif;
+  }
+  #role-bar span { opacity: .75; }
+  .role-btn {
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.3);
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Sora', sans-serif;
+    transition: background .2s;
+  }
+  .role-btn.active, .role-btn:hover { background: #fff; color: var(--purple-dark); }
+
+  /* ---- VIEWS ---- */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ============ MOBILE SHELL ============ */
+  .mobile-shell {
+    max-width: 420px;
+    margin: 24px auto;
+    background: #fff;
+    border-radius: 32px;
+    box-shadow: 0 8px 48px rgba(91,33,182,.18);
+    overflow: hidden;
+    min-height: 80vh;
+  }
+  .mobile-topbar {
+    background: var(--purple);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+  }
+  .mobile-topbar .icon-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 20px; position: relative; }
+  .mobile-topbar .badge {
+    position: absolute; top: -4px; right: -4px;
+    background: var(--orange); color: #fff;
+    font-size: 9px; border-radius: 10px; padding: 1px 4px;
+  }
+  .mobile-bottom-nav {
+    display: flex;
+    background: #fff;
+    border-top: 1px solid var(--gray-light);
+    padding: 8px 0;
+  }
+  .mob-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; cursor: pointer; font-size: 10px; color: var(--gray);
+    padding: 4px 0; border: none; background: none;
+  }
+  .mob-nav-item.active { color: var(--purple); }
+  .mob-nav-item svg { width: 20px; height: 20px; }
+  .mobile-content { padding: 0; overflow-y: auto; }
+
+  /* ---- HERO BANNER ---- */
+  .hero-banner {
+    background: linear-gradient(135deg, #1e0752 0%, #3b0f8c 60%, #7c3aed 100%);
+    color: #fff;
+    padding: 20px;
+    margin: 0;
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-banner h2 { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; }
+  .hero-banner p { font-size: 12px; opacity: .85; margin: 4px 0 12px; }
+  .btn-primary {
+    background: #fff;
+    color: var(--purple);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: opacity .2s;
+  }
+  .btn-primary:hover { opacity: .9; }
+  .btn-purple {
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    width: 100%;
+    transition: background .2s;
+  }
+  .btn-purple:hover { background: var(--purple-light); }
+  .btn-outline {
+    background: transparent;
+    color: var(--purple);
+    border: 1.5px solid var(--purple);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    width: 100%;
+  }
+
+  /* ---- SECTION LABELS ---- */
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 16px 8px;
+  }
+  .section-header h3 { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 14px; }
+  .view-all { color: var(--purple); font-size: 12px; cursor: pointer; font-weight: 600; }
+
+  /* ---- EVENT CARD (list) ---- */
+  .event-list-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--gray-light);
+    transition: background .15s;
+  }
+  .event-list-item:hover { background: var(--gray-bg); }
+  .event-thumb {
+    width: 56px; height: 56px; border-radius: 10px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #7c3aed, #3b0f8c);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .event-info { flex: 1; }
+  .event-info h4 { font-size: 13px; font-weight: 600; }
+  .event-info p { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .ticket-chip {
+    font-size: 10px; padding: 3px 8px; border-radius: 12px;
+    font-weight: 600;
+  }
+  .chip-green { background: #d1fae5; color: #065f46; }
+  .chip-purple { background: #ede9fe; color: var(--purple); }
+  .chip-orange { background: #fef3c7; color: #92400e; }
+  .chip-blue { background: #dbeafe; color: #1e40af; }
+  .chip-red { background: #fee2e2; color: #991b1b; }
+
+  /* ---- CATEGORIES ---- */
+  .category-row {
+    display: flex; gap: 12px; padding: 8px 16px 16px; overflow-x: auto;
+  }
+  .cat-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; min-width: 56px;
+  }
+  .cat-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    border: 1.5px solid var(--gray-light);
+    transition: background .2s, border .2s;
+  }
+  .cat-item:hover .cat-icon { background: #ede9fe; border-color: var(--purple); }
+  .cat-item span { font-size: 10px; color: var(--gray); }
+
+  /* ---- TICKET CARD ---- */
+  .ticket-card {
+    margin: 12px 16px;
+    border-radius: 16px;
+    border: 1px solid var(--gray-light);
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow .2s;
+  }
+  .ticket-card:hover { box-shadow: 0 4px 20px rgba(91,33,182,.12); }
+  .ticket-card-header {
+    background: linear-gradient(135deg, #1e0752, #7c3aed);
+    color: #fff;
+    display: flex; gap: 12px;
+    padding: 14px;
+  }
+  .ticket-card-header h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700; }
+  .ticket-card-header p { font-size: 11px; opacity: .85; margin: 2px 0; }
+  .ticket-meta { display: flex; gap: 20px; padding: 12px 14px; background: #fff; }
+  .ticket-meta-item label { font-size: 10px; color: var(--gray); display: block; }
+  .ticket-meta-item span { font-size: 12px; font-weight: 600; }
+  .qr-box {
+    display: flex; justify-content: center; padding: 10px;
+    background: #fafafa;
+    border-top: 1px dashed var(--gray-light);
+  }
+  .qr-placeholder {
+    width: 90px; height: 90px;
+    background: repeating-linear-gradient(0deg, #000 0px, #000 3px, #fff 3px, #fff 6px),
+                repeating-linear-gradient(90deg, #000 0px, #000 3px, #fff 3px, #fff 6px);
+    background-blend-mode: multiply;
+    border-radius: 8px;
+  }
+
+  /* ---- AGENDA ---- */
+  .day-tabs { display: flex; gap: 0; padding: 12px 16px 0; overflow-x: auto; }
+  .day-tab {
+    padding: 8px 16px; border-radius: 10px; cursor: pointer;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    background: var(--gray-light); color: var(--gray); border: none;
+    margin-right: 8px; font-family: 'Sora', sans-serif;
+    transition: background .2s, color .2s;
+  }
+  .day-tab.active { background: var(--purple); color: #fff; }
+  .agenda-item {
+    display: flex; gap: 12px; padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-light);
+    align-items: flex-start;
+    cursor: pointer;
+  }
+  .agenda-time { font-size: 11px; color: var(--gray); min-width: 60px; margin-top: 2px; }
+  .agenda-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); margin-top: 5px; flex-shrink: 0; }
+  .agenda-info h4 { font-size: 13px; font-weight: 600; }
+  .agenda-info p { font-size: 11px; color: var(--gray); margin: 2px 0; }
+  .room-chip { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+
+  /* ---- EVENT DETAILS PAGE (mobile) ---- */
+  .event-detail-img {
+    width: 100%; height: 180px;
+    background: linear-gradient(135deg, #1e0752 0%, #7c3aed 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+  }
+  .event-detail-body { padding: 16px; }
+  .meta-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--gray); margin: 6px 0; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .tag { background: #ede9fe; color: var(--purple); font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+  .highlight-item { display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 6px 0; }
+  .highlight-item::before { content: '✓'; color: var(--green); font-weight: 700; }
+  .price-row { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 12px; }
+  .price-row .price { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; color: var(--purple); }
+
+  /* ============ ADMIN SHELL ============ */
+  .admin-shell {
+    display: flex; min-height: 100vh;
+  }
+  .sidebar {
+    width: 200px; background: #fff;
+    border-right: 1px solid var(--gray-light);
+    display: flex; flex-direction: column;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    font-family: 'Sora', sans-serif;
+    font-weight: 700; font-size: 20px;
+    color: var(--purple);
+    border-bottom: 1px solid var(--gray-light);
+  }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    font-size: 13px; font-weight: 500;
+    color: var(--gray);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+    background: none; border-top: none; border-right: none; border-bottom: none;
+    width: 100%; text-align: left; font-family: 'Inter', sans-serif;
+  }
+  .sidebar-link:hover { background: var(--bg); color: var(--purple); }
+  .sidebar-link.active { color: var(--purple); background: #ede9fe; border-left-color: var(--purple); font-weight: 600; }
+  .sidebar-link .icon { font-size: 16px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--gray-light); font-size: 12px; color: var(--gray); cursor: pointer; }
+
+  .admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .admin-topbar {
+    background: #fff; border-bottom: 1px solid var(--gray-light);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+  }
+  .admin-topbar h1 { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; }
+  .admin-user { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--purple); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .admin-content { flex: 1; overflow-y: auto; padding: 24px 28px; background: var(--bg); }
+
+  /* ---- STAT CARDS ---- */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: #fff; border-radius: 14px; padding: 18px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06);
+  }
+  .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .stat-val { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+  /* ---- TABLE ---- */
+  .card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 8px rgba(0,0,0,.06); margin-bottom: 20px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .card-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; font-size: 11px; color: var(--gray); font-weight: 600; border-bottom: 1px solid var(--gray-light); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--gray-light); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .status-chip { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 600; }
+
+  /* ---- FORM ---- */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .form-label .req { color: var(--red); }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-light);
+    border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif;
+    outline: none; transition: border .2s;
+    background: #fff;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--purple); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  /* ---- CHART PLACEHOLDER ---- */
+  .chart-placeholder {
+    height: 160px;
+    background: linear-gradient(180deg, #ede9fe 0%, #fff 100%);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: flex-end;
+    padding: 0 16px 16px;
+    gap: 6px;
+  }
+  .chart-bar {
+    flex: 1; border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, var(--purple-light), var(--purple));
+    opacity: .8;
+  }
+
+  /* ---- LOGIN ---- */
+  .login-shell {
+    display: flex; min-height: 100vh;
+  }
+  .login-left {
+    flex: 1;
+    background: linear-gradient(135deg, #1e0752 0%, #7c3aed 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px;
+    color: #fff;
+  }
+  .login-left h1 { font-family: 'Sora', sans-serif; font-size: 36px; font-weight: 800; }
+  .login-left p { opacity: .8; margin-top: 8px; font-size: 16px; }
+  .login-right {
+    width: 480px; display: flex; align-items: center; justify-content: center;
+    background: #fff; padding: 48px;
+  }
+  .login-form { width: 100%; }
+  .login-form h2 { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .login-form p { font-size: 13px; color: var(--gray); margin-bottom: 28px; }
+  .social-btn {
+    width: 100%; padding: 10px; border: 1.5px solid var(--gray-light); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 13px; font-weight: 500; cursor: pointer; background: #fff;
+    margin-bottom: 10px; transition: background .2s;
+  }
+  .social-btn:hover { background: var(--bg); }
+  .divider { text-align: center; color: var(--gray); font-size: 12px; margin: 14px 0; position: relative; }
+  .divider::before, .divider::after {
+    content: ''; position: absolute; top: 50%; width: 42%; height: 1px; background: var(--gray-light);
+  }
+  .divider::before { left: 0; }
+  .divider::after { right: 0; }
+  .signup-link { text-align: center; margin-top: 16px; font-size: 13px; color: var(--gray); }
+  .signup-link a { color: var(--purple); font-weight: 600; cursor: pointer; }
+
+  /* ---- CHECK-IN ---- */
+  .checkin-scanner {
+    border: 3px solid var(--purple);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    margin: 16px;
+    background: #fafafe;
+  }
+  .qr-frame {
+    width: 120px; height: 120px; margin: 16px auto;
+    border: 3px solid var(--purple);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .success-banner {
+    background: #d1fae5; color: #065f46;
+    border-radius: 10px; padding: 12px 16px; margin: 12px 16px;
+    display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600;
+  }
+
+  /* ---- ANALYTICS MINI CHART ---- */
+  .line-chart {
+    height: 120px; position: relative; overflow: hidden;
+  }
+  .line-chart svg { width: 100%; height: 100%; }
+
+  /* ---- TABS ---- */
+  .tab-bar {
+    display: flex; border-bottom: 2px solid var(--gray-light);
+    margin-bottom: 16px; gap: 0;
+  }
+  .tab {
+    padding: 10px 16px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    color: var(--gray); background: none; border-top: none; border-left: none; border-right: none;
+    font-family: 'Inter', sans-serif;
+    transition: color .2s, border-color .2s;
+  }
+  .tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 600; }
+
+  /* MISC */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .badge-count { background: var(--red); color: #fff; border-radius: 10px; font-size: 10px; padding: 1px 5px; font-weight: 700; }
+  .admin-btn {
+    background: var(--purple); color: #fff; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'Sora', sans-serif; transition: background .2s;
+  }
+  .admin-btn:hover { background: var(--purple-light); }
+  .admin-btn-outline {
+    background: #fff; color: var(--purple); border: 1.5px solid var(--purple);
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'Sora', sans-serif;
+  }
+  .upcoming-event-item { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; cursor: pointer; }
+  .upcoming-event-item:hover h4 { color: var(--purple); }
+  .upcoming-thumb { width: 48px; height: 48px; border-radius: 10px; background: linear-gradient(135deg, #7c3aed, #1e0752); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .upcoming-event-item h4 { font-size: 13px; font-weight: 600; }
+  .upcoming-event-item p { font-size: 11px; color: var(--gray); }
+
+  /* Create Event Steps */
+  .step-list { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+  .step-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; border-bottom: 1px solid var(--gray-light); }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--purple); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-num.inactive { background: var(--gray-light); color: var(--gray); }
+  .step-name { font-size: 13px; font-weight: 500; }
+
+  /* Notification dot */
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); display: inline-block; margin-right: 6px; }
+
+  /* Calendar */
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .cal-day { text-align: center; padding: 6px; font-size: 12px; border-radius: 8px; cursor: pointer; }
+  .cal-day:hover { background: var(--bg); }
+  .cal-day.has-event { font-weight: 700; color: var(--purple); background: #ede9fe; }
+  .cal-day.today { background: var(--purple); color: #fff; font-weight: 700; }
+  .cal-header-day { font-size: 10px; color: var(--gray); text-align: center; padding: 4px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- Role switcher bar -->
+<div id="role-bar">
+  <span>View as:</span>
+  <button class="role-btn active" onclick="switchRole('attendee')">📱 Attendee (Mobile)</button>
+  <button class="role-btn" onclick="switchRole('admin')">🖥️ Organizer (Admin)</button>
+  <button class="role-btn" onclick="switchRole('login')">🔐 Login / Sign Up</button>
+</div>
+
+<!-- =================== ATTENDEE VIEW =================== -->
+<div id="view-attendee" class="view active">
+  <div class="mobile-shell">
+
+    <!-- TOP BAR -->
+    <div class="mobile-topbar" id="mob-topbar">
+      <button class="icon-btn" onclick="showMobPage('home')">☰</button>
+      <span id="mob-title" style="font-family:'Sora',sans-serif;">EventPro</span>
+      <button class="icon-btn" onclick="showMobPage('notifications')">
+        🔔<span class="badge">2</span>
+      </button>
+    </div>
+
+    <!-- PAGES -->
+    <div class="mobile-content" id="mob-pages">
+
+      <!-- HOME -->
+      <div id="mob-home" class="mob-page">
+        <div class="hero-banner">
+          <h2>Tech Conference 2025</h2>
+          <p>May 20–22, 2025 · Melbourne Convention Centre</p>
+          <button class="btn-primary" onclick="showMobPage('event-detail')">View Details</button>
+        </div>
+        <div class="section-header">
+          <h3>Upcoming Events</h3>
+          <span class="view-all" onclick="showMobPage('events-list')">View all</span>
+        </div>
+        <div class="event-list-item" onclick="showMobPage('event-detail')">
+          <div class="event-thumb">🎤</div>
+          <div class="event-info">
+            <h4>Tech Conference 2025</h4>
+            <p>May 20–22, 2025 · Melbourne, Australia</p>
+          </div>
+          <span class="ticket-chip chip-green">Tickets Left</span>
+        </div>
+        <div class="event-list-item" onclick="showMobPage('event-detail2')">
+          <div class="event-thumb">🎵</div>
+          <div class="event-info">
+            <h4>Music Fest 2025</h4>
+            <p>Jun 14–15, 2025 · Sydney, Australia</p>
+          </div>
+          <span class="ticket-chip chip-green">Tickets Left</span>
+        </div>
+        <div class="event-list-item" onclick="showMobPage('event-detail3')">
+          <div class="event-thumb">🎨</div>
+          <div class="event-info">
+            <h4>Art Expo 2025</h4>
+            <p>Jul 5–7, 2025 · Brisbane, Australia</p>
+          </div>
+          <span class="ticket-chip chip-purple">Register</span>
+        </div>
+        <div class="section-header" style="margin-top:8px;">
+          <h3>Categories</h3>
+        </div>
+        <div class="category-row">
+          <div class="cat-item" onclick="alert('Showing Technology events')"><div class="cat-icon">💻</div><span>Technology</span></div>
+          <div class="cat-item" onclick="alert('Showing Music events')"><div class="cat-icon">🎵</div><span>Music</span></div>
+          <div class="cat-item" onclick="alert('Showing Business events')"><div class="cat-icon">📊</div><span>Business</span></div>
+          <div class="cat-item" onclick="alert('Showing Art events')"><div class="cat-icon">🎨</div><span>Art</span></div>
+          <div class="cat-item" onclick="alert('Showing more categories')"><div class="cat-icon">···</div><span>More</span></div>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+
+      <!-- EVENTS LIST -->
+      <div id="mob-events-list" class="mob-page" style="display:none;">
+        <div class="section-header" style="padding-top:16px;"><h3>All Events</h3></div>
+        <div class="event-list-item" onclick="showMobPage('event-detail')">
+          <div class="event-thumb">🎤</div>
+          <div class="event-info"><h4>Tech Conference 2025</h4><p>May 20–22, 2025 · Melbourne</p></div>
+          <span class="ticket-chip chip-green">Tickets Left</span>
+        </div>
+        <div class="event-list-item" onclick="showMobPage('event-detail2')">
+          <div class="event-thumb">🎵</div>
+          <div class="event-info"><h4>Music Fest 2025</h4><p>Jun 14–15, 2025 · Sydney</p></div>
+          <span class="ticket-chip chip-green">Tickets Left</span>
+        </div>
+        <div class="event-list-item" onclick="showMobPage('event-detail3')">
+          <div class="event-thumb">🎨</div>
+          <div class="event-info"><h4>Art Expo 2025</h4><p>Jul 5–7, 2025 · Brisbane</p></div>
+          <span class="ticket-chip chip-purple">Register</span>
+        </div>
+        <div class="event-list-item" onclick="alert('Business Summit details')">
+          <div class="event-thumb">📊</div>
+          <div class="event-info"><h4>Business Summit 2025</h4><p>Jul 10, 2025 · Sydney</p></div>
+          <span class="ticket-chip chip-orange">Few Left</span>
+        </div>
+        <div class="event-list-item" onclick="alert('Workshop details')">
+          <div class="event-thumb">🛠️</div>
+          <div class="event-info"><h4>Workshop Series 2025</h4><p>Aug 1, 2025 · Melbourne</p></div>
+          <span class="ticket-chip chip-blue">Free</span>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+
+      <!-- EVENT DETAIL 1 -->
+      <div id="mob-event-detail" class="mob-page" style="display:none;">
+        <div style="position:relative;">
+          <div class="event-detail-img">🎤</div>
+          <button onclick="showMobPage('home')" style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.4);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">←</button>
+          <button onclick="alert('Added to favourites!')" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,.4);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;">♡</button>
+        </div>
+        <div class="event-detail-body">
+          <h2 style="font-family:'Sora',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;">Tech Conference 2025</h2>
+          <div class="meta-row">📅 May 20–22, 2025 &nbsp;·&nbsp; 9:00 AM – 6:00 PM</div>
+          <div class="meta-row">📍 Melbourne Convention Centre<br><span style="font-size:11px;padding-left:18px;">1 Convention Centre Pl, South Wharf VIC 3006</span></div>
+          <p style="font-size:13px;color:var(--gray);margin:12px 0;line-height:1.6;">An annual conference where technology leaders and innovators come together to share ideas, explore the latest trends, and shape the future.</p>
+          <div class="tag-row">
+            <span class="tag">3 Days</span><span class="tag">5+ Speakers</span><span class="tag">Networking</span><span class="tag">Workshops</span>
+          </div>
+          <h3 style="font-family:'Sora',sans-serif;font-size:14px;font-weight:700;margin:12px 0 8px;">Highlights</h3>
+          <div class="highlight-item">Keynote sessions from industry leaders</div>
+          <div class="highlight-item">Hands-on workshops and panel discussions</div>
+          <div class="highlight-item">Networking opportunities with professionals</div>
+          <div class="highlight-item">Exhibition & product showcases</div>
+          <div class="price-row">
+            <div><div style="font-size:11px;color:var(--gray);">From</div><div class="price">$49.00</div></div>
+            <span class="ticket-chip chip-green">Tickets Left</span>
+          </div>
+          <button class="btn-purple" onclick="alert('🎉 Ticket purchase flow started!\n\nIn full app: Select ticket type → Enter details → Payment → Confirmation')">Get Tickets</button>
+        </div>
+      </div>
+
+      <!-- EVENT DETAIL 2 -->
+      <div id="mob-event-detail2" class="mob-page" style="display:none;">
+        <div style="position:relative;">
+          <div class="event-detail-img" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);">🎵</div>
+          <button onclick="showMobPage('events-list')" style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.4);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">←</button>
+        </div>
+        <div class="event-detail-body">
+          <h2 style="font-family:'Sora',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;">Music Fest 2025</h2>
+          <div class="meta-row">📅 Jun 14–15, 2025 &nbsp;·&nbsp; 2:00 PM – 11:00 PM</div>
+          <div class="meta-row">📍 Sydney Opera House, Sydney, Australia</div>
+          <p style="font-size:13px;color:var(--gray);margin:12px 0;line-height:1.6;">A two-day music festival featuring top artists from around the world. Live performances, food stalls, and an unforgettable atmosphere.</p>
+          <div class="tag-row">
+            <span class="tag">2 Days</span><span class="tag">Live Music</span><span class="tag">Food</span><span class="tag">Outdoor</span>
+          </div>
+          <div class="price-row">
+            <div><div style="font-size:11px;color:var(--gray);">From</div><div class="price">$79.00</div></div>
+            <span class="ticket-chip chip-green">Tickets Left</span>
+          </div>
+          <button class="btn-purple" onclick="alert('🎉 Redirecting to ticket purchase...')">Get Tickets</button>
+        </div>
+      </div>
+
+      <!-- EVENT DETAIL 3 -->
+      <div id="mob-event-detail3" class="mob-page" style="display:none;">
+        <div style="position:relative;">
+          <div class="event-detail-img" style="background:linear-gradient(135deg,#7f1d1d,#dc2626,#f97316);">🎨</div>
+          <button onclick="showMobPage('events-list')" style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.4);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">←</button>
+        </div>
+        <div class="event-detail-body">
+          <h2 style="font-family:'Sora',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;">Art Expo 2025</h2>
+          <div class="meta-row">📅 Jul 5–7, 2025 &nbsp;·&nbsp; 10:00 AM – 6:00 PM</div>
+          <div class="meta-row">📍 Brisbane Convention Centre, Brisbane, Australia</div>
+          <p style="font-size:13px;color:var(--gray);margin:12px 0;line-height:1.6;">A showcase of contemporary art from over 50 artists across Australia and internationally. Interactive installations, galleries, and workshops.</p>
+          <div class="tag-row">
+            <span class="tag">3 Days</span><span class="tag">Contemporary Art</span><span class="tag">Workshops</span>
+          </div>
+          <div class="price-row">
+            <div><div style="font-size:11px;color:var(--gray);">From</div><div class="price">$35.00</div></div>
+            <span class="ticket-chip chip-purple">Register</span>
+          </div>
+          <button class="btn-purple" onclick="alert('🎉 Redirecting to registration...')">Register Now</button>
+        </div>
+      </div>
+
+      <!-- MY TICKETS -->
+      <div id="mob-tickets" class="mob-page" style="display:none;">
+        <div style="display:flex;gap:0;border-bottom:2px solid var(--gray-light);margin:0 16px;">
+          <button id="tab-upcoming" class="tab active" onclick="switchTicketTab('upcoming')" style="padding:12px 0;flex:1;">Upcoming</button>
+          <button id="tab-past" class="tab" onclick="switchTicketTab('past')" style="padding:12px 0;flex:1;">Past</button>
+        </div>
+        <div id="tickets-upcoming">
+          <div class="ticket-card" onclick="showMobPage('ticket-detail')">
+            <div class="ticket-card-header">
+              <div class="event-thumb">🎤</div>
+              <div>
+                <h4>Tech Conference 2025</h4>
+                <p>May 20–22, 2025</p>
+                <p>Melbourne Convention Centre</p>
+              </div>
+            </div>
+            <div class="ticket-meta">
+              <div class="ticket-meta-item"><label>Ticket Type</label><span>General Admission</span></div>
+              <div class="ticket-meta-item"><label>Ticket ID</label><span>TC25-GA-98421</span></div>
+            </div>
+            <div class="qr-box"><div class="qr-placeholder"></div></div>
+            <div style="padding:12px 14px;"><button class="btn-outline" onclick="event.stopPropagation();showMobPage('ticket-detail')">View Ticket Details</button></div>
+          </div>
+          <div class="ticket-card">
+            <div class="ticket-card-header" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);">
+              <div class="event-thumb">🎵</div>
+              <div>
+                <h4>Music Fest 2025</h4>
+                <p>Jun 14–15, 2025</p>
+                <p>Sydney Opera House</p>
+              </div>
+            </div>
+            <div class="ticket-meta">
+              <div class="ticket-meta-item"><label>Ticket Type</label><span>VIP</span></div>
+              <div class="ticket-meta-item"><label>Ticket ID</label><span>MF25-VIP-22104</span></div>
+            </div>
+            <div class="qr-box"><div class="qr-placeholder"></div></div>
+            <div style="padding:12px 14px;"><button class="btn-outline">View Ticket Details</button></div>
+          </div>
+        </div>
+        <div id="tickets-past" style="display:none;">
+          <div style="text-align:center;padding:40px 20px;color:var(--gray);">
+            <div style="font-size:48px;margin-bottom:12px;">🗂️</div>
+            <p>No past events yet.</p>
+          </div>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+
+      <!-- TICKET DETAIL -->
+      <div id="mob-ticket-detail" class="mob-page" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--gray-light);">
+          <button onclick="showMobPage('tickets')" style="background:none;border:none;font-size:20px;cursor:pointer;">←</button>
+          <h3 style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;">Ticket Details</h3>
+        </div>
+        <div style="padding:16px;">
+          <div style="background:linear-gradient(135deg,#1e0752,#7c3aed);border-radius:16px;padding:20px;color:#fff;text-align:center;margin-bottom:16px;">
+            <div style="font-size:32px;margin-bottom:8px;">🎤</div>
+            <h3 style="font-family:'Sora',sans-serif;font-size:18px;font-weight:700;">Tech Conference 2025</h3>
+            <p style="opacity:.85;font-size:13px;margin:4px 0;">May 20–22, 2025 · Melbourne Convention Centre</p>
+            <div style="margin:16px 0;display:flex;justify-content:center;"><div class="qr-placeholder" style="width:120px;height:120px;"></div></div>
+            <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px;font-size:12px;">
+              <div style="opacity:.75;">Ticket ID</div>
+              <div style="font-weight:700;font-size:15px;letter-spacing:1px;">TC25-GA-98421</div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><div style="font-size:11px;color:var(--gray);">Name</div><div style="font-weight:600;font-size:13px;">Sarah Johnson</div></div>
+              <div><div style="font-size:11px;color:var(--gray);">Ticket Type</div><div style="font-weight:600;font-size:13px;">General Admission</div></div>
+              <div><div style="font-size:11px;color:var(--gray);">Email</div><div style="font-weight:600;font-size:13px;">sarah.j@email.com</div></div>
+              <div><div style="font-size:11px;color:var(--gray);">Amount Paid</div><div style="font-weight:600;font-size:13px;">$49.00</div></div>
+            </div>
+          </div>
+          <button class="btn-purple" onclick="alert('📲 Ticket shared!')">Share Ticket</button>
+          <button class="btn-outline" style="margin-top:8px;" onclick="alert('📄 Downloading ticket PDF...')">Download PDF</button>
+        </div>
+      </div>
+
+      <!-- AGENDA -->
+      <div id="mob-agenda" class="mob-page" style="display:none;">
+        <div class="day-tabs">
+          <button class="day-tab active" onclick="switchDayTab(0,this)">May 20<br><span style="font-size:10px;">Day 1</span></button>
+          <button class="day-tab" onclick="switchDayTab(1,this)">May 21<br><span style="font-size:10px;">Day 2</span></button>
+          <button class="day-tab" onclick="switchDayTab(2,this)">May 22<br><span style="font-size:10px;">Day 3</span></button>
+        </div>
+        <div id="agenda-day-0">
+          <div class="agenda-item" onclick="alert('Opening Keynote\nSpeaker: Dr. Alan Turing\nRoom: Main Hall\n9:00 AM – 10:00 AM')">
+            <span class="agenda-time">09:00 AM</span>
+            <div class="agenda-dot"></div>
+            <div class="agenda-info">
+              <h4>Opening Keynote</h4>
+              <p>Dr. Alan Turing</p>
+              <span class="room-chip chip-purple">Main Hall</span>
+            </div>
+            <button onclick="event.stopPropagation();this.textContent=this.textContent==='☆'?'★':'☆';this.style.color=this.textContent==='★'?'var(--orange)':'';" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);">☆</button>
+          </div>
+          <div class="agenda-item" onclick="alert('AI and the Future\nSpeaker: Jane Cooper\nRoom: Main Hall\n10:30 AM – 11:30 AM')">
+            <span class="agenda-time">10:30 AM</span>
+            <div class="agenda-dot" style="background:var(--accent);"></div>
+            <div class="agenda-info">
+              <h4>AI and the Future</h4>
+              <p>Jane Cooper</p>
+              <span class="room-chip chip-purple">Main Hall</span>
+            </div>
+            <button onclick="event.stopPropagation();this.textContent=this.textContent==='☆'?'★':'☆';this.style.color=this.textContent==='★'?'var(--orange)':'';" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);">☆</button>
+          </div>
+          <div class="agenda-item" onclick="alert('Lunch Break\nNetworking Area\n12:00 PM – 1:00 PM')">
+            <span class="agenda-time">12:00 PM</span>
+            <div class="agenda-dot" style="background:var(--green);"></div>
+            <div class="agenda-info">
+              <h4>Lunch Break</h4>
+              <span class="room-chip chip-green">Networking Area</span>
+            </div>
+          </div>
+          <div class="agenda-item" onclick="alert('Cloud Computing 101\nSpeaker: Robert Fox\nRoom 2\n1:30 PM – 2:30 PM')">
+            <span class="agenda-time">01:30 PM</span>
+            <div class="agenda-dot"></div>
+            <div class="agenda-info">
+              <h4>Cloud Computing 101</h4>
+              <p>Robert Fox</p>
+              <span class="room-chip chip-blue">Room 2</span>
+            </div>
+            <button onclick="event.stopPropagation();this.textContent=this.textContent==='☆'?'★':'☆';this.style.color=this.textContent==='★'?'var(--orange)':'';" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);">☆</button>
+          </div>
+          <div class="agenda-item" onclick="alert('Cybersecurity Trends\nSpeaker: Emily Davis\nRoom 3\n3:00 PM – 4:00 PM')">
+            <span class="agenda-time">03:00 PM</span>
+            <div class="agenda-dot" style="background:var(--orange);"></div>
+            <div class="agenda-info">
+              <h4>Cybersecurity Trends</h4>
+              <p>Emily Davis</p>
+              <span class="room-chip chip-orange">Room 3</span>
+            </div>
+            <button onclick="event.stopPropagation();this.textContent=this.textContent==='☆'?'★':'☆';this.style.color=this.textContent==='★'?'var(--orange)':'';" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);">☆</button>
+          </div>
+          <div class="agenda-item" onclick="alert('Closing Remarks\nOrganizing Team\nMain Hall\n4:30 PM – 5:30 PM')">
+            <span class="agenda-time">04:30 PM</span>
+            <div class="agenda-dot"></div>
+            <div class="agenda-info">
+              <h4>Closing Remarks</h4>
+              <p>Organizing Team</p>
+              <span class="room-chip chip-purple">Main Hall</span>
+            </div>
+          </div>
+        </div>
+        <div id="agenda-day-1" style="display:none;">
+          <div class="agenda-item" onclick="alert('AI Workshop\nHands-on session\nWorkshop Room A\n9:00 AM – 12:00 PM')">
+            <span class="agenda-time">09:00 AM</span>
+            <div class="agenda-dot"></div>
+            <div class="agenda-info"><h4>AI Workshop</h4><p>Hands-on Session</p><span class="room-chip chip-blue">Workshop A</span></div>
+          </div>
+          <div class="agenda-item" onclick="alert('Panel: Future of Work\n12:30 PM – 2:00 PM')">
+            <span class="agenda-time">12:30 PM</span>
+            <div class="agenda-dot" style="background:var(--accent);"></div>
+            <div class="agenda-info"><h4>Panel: Future of Work</h4><p>Multiple Speakers</p><span class="room-chip chip-purple">Main Hall</span></div>
+          </div>
+          <div class="agenda-item" onclick="alert('Networking Evening\n5:00 PM – 7:00 PM')">
+            <span class="agenda-time">05:00 PM</span>
+            <div class="agenda-dot" style="background:var(--green);"></div>
+            <div class="agenda-info"><h4>Networking Evening</h4><span class="room-chip chip-green">Rooftop</span></div>
+          </div>
+        </div>
+        <div id="agenda-day-2" style="display:none;">
+          <div class="agenda-item" onclick="alert('Startup Showcase\n10:00 AM – 12:00 PM')">
+            <span class="agenda-time">10:00 AM</span>
+            <div class="agenda-dot"></div>
+            <div class="agenda-info"><h4>Startup Showcase</h4><p>Exhibition Hall</p><span class="room-chip chip-orange">Hall B</span></div>
+          </div>
+          <div class="agenda-item" onclick="alert('Award Ceremony\n3:00 PM – 4:30 PM')">
+            <span class="agenda-time">03:00 PM</span>
+            <div class="agenda-dot" style="background:var(--orange);"></div>
+            <div class="agenda-info"><h4>Award Ceremony</h4><span class="room-chip chip-purple">Main Hall</span></div>
+          </div>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="mob-profile" class="mob-page" style="display:none;">
+        <div style="background:var(--purple);padding:32px 20px 24px;color:#fff;text-align:center;">
+          <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;">👤</div>
+          <h3 style="font-family:'Sora',sans-serif;font-size:18px;font-weight:700;">Sarah Johnson</h3>
+          <p style="opacity:.8;font-size:13px;margin-top:4px;">sarah.johnson@email.com</p>
+        </div>
+        <div style="padding:16px;">
+          <div class="card" style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-weight:600;font-size:14px;">My Stats</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+              <div><div style="font-size:20px;font-weight:700;color:var(--purple);">3</div><div style="font-size:11px;color:var(--gray);">Events</div></div>
+              <div><div style="font-size:20px;font-weight:700;color:var(--purple);">2</div><div style="font-size:11px;color:var(--gray);">Tickets</div></div>
+              <div><div style="font-size:20px;font-weight:700;color:var(--purple);">1</div><div style="font-size:11px;color:var(--gray);">Favourites</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="cursor:pointer;padding:10px 0;border-bottom:1px solid var(--gray-light);" onclick="alert('Edit Profile')">✏️ &nbsp; Edit Profile</div>
+            <div style="cursor:pointer;padding:10px 0;border-bottom:1px solid var(--gray-light);" onclick="alert('Notification Preferences')">🔔 &nbsp; Notifications</div>
+            <div style="cursor:pointer;padding:10px 0;border-bottom:1px solid var(--gray-light);" onclick="alert('Payment Methods')">💳 &nbsp; Payment Methods</div>
+            <div style="cursor:pointer;padding:10px 0;border-bottom:1px solid var(--gray-light);" onclick="alert('Help & Support opened')">❓ &nbsp; Help & Support</div>
+            <div style="cursor:pointer;padding:10px 0;color:var(--red);" onclick="switchRole('login')">🚪 &nbsp; Sign Out</div>
+          </div>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div id="mob-notifications" class="mob-page" style="display:none;">
+        <div style="padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;">Notifications</h3>
+            <button onclick="alert('All notifications cleared')" style="font-size:12px;color:var(--purple);background:none;border:none;cursor:pointer;font-weight:600;">Clear all</button>
+          </div>
+          <div class="card" style="margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">TODAY</div>
+            <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);">
+              <div style="font-size:20px;">🔔</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;">Session Reminder <span class="notif-dot" style="background:var(--red);"></span></div>
+                <div style="font-size:11px;color:var(--gray);">Opening Keynote starts in 15 mins</div>
+                <div style="font-size:10px;color:var(--gray);margin-top:2px;">8:45 AM</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;padding:10px 0;">
+              <div style="font-size:20px;">🎫</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;">Ticket Confirmed</div>
+                <div style="font-size:11px;color:var(--gray);">Your ticket for Tech Conference 2025 is confirmed.</div>
+                <div style="font-size:10px;color:var(--gray);margin-top:2px;">8:30 AM</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">YESTERDAY</div>
+            <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);">
+              <div style="font-size:20px;">📢</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;">Important Update</div>
+                <div style="font-size:11px;color:var(--gray);">Room change for "AI and Future" – now in Room 1.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;padding:10px 0;">
+              <div style="font-size:20px;">🎉</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;">Welcome to EventPro</div>
+                <div style="font-size:11px;color:var(--gray);">Thank you for joining Tech Conference 2025.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+
+    </div><!-- end mob-pages -->
+
+    <!-- BOTTOM NAV -->
+    <div class="mobile-bottom-nav">
+      <button class="mob-nav-item active" id="mob-nav-home" onclick="showMobPage('home');setMobNav('home')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Home
+      </button>
+      <button class="mob-nav-item" id="mob-nav-events" onclick="showMobPage('events-list');setMobNav('events')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+        Events
+      </button>
+      <button class="mob-nav-item" id="mob-nav-tickets" onclick="showMobPage('tickets');setMobNav('tickets')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 10V6c0-1.11-.9-2-2-2H4c-1.1 0-1.99.89-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-1.99 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2z"/></svg>
+        Tickets
+      </button>
+      <button class="mob-nav-item" id="mob-nav-profile" onclick="showMobPage('profile');setMobNav('profile')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Profile
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =================== LOGIN VIEW =================== -->
+<div id="view-login" class="view">
+  <div class="login-shell">
+    <div class="login-left">
+      <div style="font-family:'Sora',sans-serif;font-size:14px;opacity:.6;margin-bottom:6px;">EVENTPRO</div>
+      <h1>EventPro</h1>
+      <p>Manage events. Connect people.</p>
+      <div style="margin-top:48px;font-size:13px;opacity:.6;">Trusted by 1,000+ event organizers</div>
+    </div>
+    <div class="login-right">
+      <div class="login-form">
+        <h2>Welcome Back!</h2>
+        <p>Sign in to continue to your account</p>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div style="position:relative;">
+            <input class="form-input" type="password" placeholder="Enter your password" id="pass-input">
+            <button onclick="togglePass()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;">👁</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-size:13px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" checked> Remember me</label>
+          <span style="color:var(--purple);cursor:pointer;font-weight:600;" onclick="alert('Password reset email sent!')">Forgot Password?</span>
+        </div>
+        <button class="btn-purple" style="margin-bottom:16px;" onclick="doLogin()">Sign In</button>
+        <div class="divider">OR</div>
+        <button class="social-btn" onclick="alert('Google Sign In – would redirect to Google OAuth')">
+          <span style="font-size:18px;">G</span> Sign in with Google
+        </button>
+        <button class="social-btn" onclick="alert('Apple Sign In – would redirect to Apple OAuth')">
+          <span style="font-size:18px;"></span> Sign in with Apple
+        </button>
+        <div class="signup-link">Don't have an account? <a onclick="alert('Sign up form – create new account')">Sign Up</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ADMIN VIEW =================== -->
+<div id="view-admin" class="view">
+  <div class="admin-shell">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-logo">EventPro</div>
+      <div class="sidebar-nav">
+        <button class="sidebar-link active" id="sl-dashboard" onclick="showAdminPage('dashboard');setSidebarActive('dashboard')"><span class="icon">🏠</span>Dashboard</button>
+        <button class="sidebar-link" id="sl-events" onclick="showAdminPage('events');setSidebarActive('events')"><span class="icon">📅</span>Events</button>
+        <button class="sidebar-link" id="sl-tickets" onclick="showAdminPage('a-tickets');setSidebarActive('tickets')"><span class="icon">🎫</span>Tickets</button>
+        <button class="sidebar-link" id="sl-attendees" onclick="showAdminPage('attendees');setSidebarActive('attendees')"><span class="icon">👥</span>Attendees</button>
+        <button class="sidebar-link" id="sl-checkin" onclick="showAdminPage('checkin');setSidebarActive('checkin')"><span class="icon">✅</span>Check-in</button>
+        <button class="sidebar-link" id="sl-reports" onclick="showAdminPage('reports');setSidebarActive('reports')"><span class="icon">📊</span>Reports</button>
+        <button class="sidebar-link" id="sl-calendar" onclick="showAdminPage('a-calendar');setSidebarActive('calendar')"><span class="icon">📆</span>Calendar</button>
+        <button class="sidebar-link" id="sl-marketing" onclick="showAdminPage('marketing');setSidebarActive('marketing')"><span class="icon">📣</span>Marketing</button>
+        <button class="sidebar-link" id="sl-settings" onclick="showAdminPage('a-settings');setSidebarActive('settings')"><span class="icon">⚙️</span>Settings</button>
+      </div>
+      <div class="sidebar-footer" onclick="switchRole('login')">❓ Help & Support</div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <h1 id="admin-page-title">Dashboard</h1>
+        <div class="admin-user">
+          <span style="font-size:20px;cursor:pointer;" onclick="alert('1 notification: Ticket sales milestone reached!')">🔔 <span class="badge-count">1</span></span>
+          <div class="avatar">EJ</div>
+          <div style="font-size:13px;"><div style="font-weight:600;">Emma Johnson</div><div style="font-size:11px;color:var(--gray);">Organizer</div></div>
+        </div>
+      </div>
+      <div class="admin-content" id="admin-pages">
+
+        <!-- DASHBOARD -->
+        <div id="ap-dashboard" class="ap">
+          <div class="stat-grid">
+            <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;">📅</div><div><div class="stat-val">12</div><div class="stat-label">Total Events</div></div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#d1fae5;">🎫</div><div><div class="stat-val">1,248</div><div class="stat-label">Tickets Sold</div></div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;">💰</div><div><div class="stat-val">$24,580</div><div class="stat-label">Total Revenue</div></div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;">👥</div><div><div class="stat-val">984</div><div class="stat-label">Total Attendees</div></div></div>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Ticket Sales Overview</span><select style="font-size:12px;border:1px solid var(--gray-light);border-radius:6px;padding:4px 8px;" onchange="alert('Filtering by: '+this.value)"><option>This Month</option><option>Last Month</option><option>This Year</option></select></div>
+              <div class="chart-placeholder">
+                <div class="chart-bar" style="height:40%;"></div>
+                <div class="chart-bar" style="height:55%;"></div>
+                <div class="chart-bar" style="height:48%;"></div>
+                <div class="chart-bar" style="height:70%;"></div>
+                <div class="chart-bar" style="height:65%;"></div>
+                <div class="chart-bar" style="height:82%;"></div>
+                <div class="chart-bar" style="height:90%;"></div>
+                <div class="chart-bar" style="height:78%;"></div>
+                <div class="chart-bar" style="height:95%;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray);padding:8px 4px 0;">
+                <span>May 1</span><span>May 8</span><span>May 15</span><span>May 22</span><span>May 29</span>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Upcoming Events</span><span class="view-all" onclick="showAdminPage('events');setSidebarActive('events')">View All</span></div>
+              <div class="upcoming-event-item" onclick="showAdminPage('event-detail-admin');setSidebarActive('events')">
+                <div class="upcoming-thumb">🎤</div>
+                <div><h4>Tech Conference 2025</h4><p>📅 May 20, 2025 · Melbourne</p></div>
+              </div>
+              <div class="upcoming-event-item" onclick="showAdminPage('events');setSidebarActive('events')">
+                <div class="upcoming-thumb" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);">🎵</div>
+                <div><h4>Music Fest 2025</h4><p>📅 Jun 15, 2025 · Sydney</p></div>
+              </div>
+              <div class="upcoming-event-item" onclick="showAdminPage('events');setSidebarActive('events')">
+                <div class="upcoming-thumb" style="background:linear-gradient(135deg,#1a3a1a,#166534);">📊</div>
+                <div><h4>Business Summit</h4><p>📅 Jul 10, 2025 · Hotel Grand, Sydney</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Recent Orders</span><span class="view-all" onclick="showAdminPage('a-tickets');setSidebarActive('tickets')">View All Orders</span></div>
+            <table>
+              <thead><tr><th>Order ID</th><th>Event</th><th>Attendee</th><th>Tickets</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>#ORD-1250</td><td>Tech Conference 2025</td><td>Michael Brown</td><td>2</td><td>$298.00</td><td><span class="status-chip chip-green">Completed</span></td></tr>
+                <tr><td>#ORD-1249</td><td>Music Fest 2025</td><td>Sarah Johnson</td><td>3</td><td>$267.00</td><td><span class="status-chip chip-green">Completed</span></td></tr>
+                <tr><td>#ORD-1248</td><td>Art Expo 2025</td><td>David Wilson</td><td>1</td><td>$79.00</td><td><span class="status-chip chip-orange">Pending</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- EVENTS LIST -->
+        <div id="ap-events" class="ap" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div style="font-size:13px;color:var(--gray);">Events › All Events</div>
+            <button class="admin-btn" onclick="showAdminPage('create-event');setSidebarActive('events')">+ Create New Event</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">All Events (12)</span><input class="form-input" placeholder="Search events..." style="width:220px;"></div>
+            <table>
+              <thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Tickets Sold</th><th>Revenue</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr style="cursor:pointer;" onclick="showAdminPage('event-detail-admin');setSidebarActive('events')">
+                  <td><strong>Tech Conference 2025</strong></td><td>May 20–22</td><td>Melbourne Conv Ctr</td><td>632/1000</td><td>$18,960</td>
+                  <td><span class="status-chip chip-green">Published</span></td>
+                  <td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;" onclick="event.stopPropagation();showAdminPage('create-event')">Edit</button></td>
+                </tr>
+                <tr><td><strong>Music Fest 2025</strong></td><td>Jun 14–15</td><td>Sydney Opera House</td><td>320/800</td><td>$5,620</td>
+                  <td><span class="status-chip chip-orange">Draft</span></td>
+                  <td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;">Edit</button></td>
+                </tr>
+                <tr><td><strong>Business Summit</strong></td><td>Jul 10</td><td>Hotel Grand, Sydney</td><td>220/400</td><td>$4,220</td>
+                  <td><span class="status-chip chip-green">Published</span></td>
+                  <td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;">Edit</button></td>
+                </tr>
+                <tr><td><strong>Art Expo 2025</strong></td><td>Jul 5–7</td><td>Brisbane Conv Ctr</td><td>145/500</td><td>$1,600</td>
+                  <td><span class="status-chip chip-green">Published</span></td>
+                  <td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;">Edit</button></td>
+                </tr>
+                <tr><td><strong>Workshop Series</strong></td><td>Aug 1</td><td>Melbourne</td><td>98/200</td><td>$1,600</td>
+                  <td><span class="status-chip chip-blue">Upcoming</span></td>
+                  <td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- EVENT DETAIL ADMIN -->
+        <div id="ap-event-detail-admin" class="ap" style="display:none;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <button onclick="showAdminPage('events');setSidebarActive('events')" style="background:none;border:none;font-size:20px;cursor:pointer;">←</button>
+            <div style="flex:1;">
+              <div style="font-size:12px;color:var(--gray);">Events › Tech Conference 2025</div>
+              <h2 style="font-family:'Sora',sans-serif;font-size:20px;">Event Details</h2>
+            </div>
+            <button class="admin-btn-outline" onclick="alert('Preview page opened in new tab')">👁 Preview</button>
+            <button class="admin-btn" onclick="showAdminPage('create-event');setSidebarActive('events')">✏️ Edit</button>
+          </div>
+          <div class="card" style="margin-bottom:20px;">
+            <div style="display:flex;gap:20px;align-items:flex-start;">
+              <div style="width:200px;height:120px;border-radius:12px;background:linear-gradient(135deg,#1e0752,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:48px;flex-shrink:0;">🎤</div>
+              <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <h2 style="font-family:'Sora',sans-serif;font-size:20px;">Tech Conference 2025</h2>
+                  <span class="status-chip chip-green">Published</span>
+                </div>
+                <div style="font-size:13px;color:var(--gray);margin:4px 0;">📅 May 20, 2025 · 09:00 AM – 05:00 PM</div>
+                <div style="font-size:13px;color:var(--gray);margin:4px 0;">📍 Melbourne Convention Centre, Australia</div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px;">
+                  <div><div style="font-size:12px;color:var(--gray);">Tickets Sold</div><div style="font-weight:700;font-size:18px;">632 / 1000</div></div>
+                  <div><div style="font-size:12px;color:var(--gray);">Revenue</div><div style="font-weight:700;font-size:18px;color:var(--green);">$18,960</div></div>
+                  <div><div style="font-size:12px;color:var(--gray);">Attendees</div><div style="font-weight:700;font-size:18px;">564</div></div>
+                  <div><div style="font-size:12px;color:var(--gray);">Check-in Rate</div><div style="font-weight:700;font-size:18px;">78%</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-bar">
+            <button class="tab active" onclick="setTab(this,'edt')">Overview</button>
+            <button class="tab" onclick="setTab(this,'edt')">Tickets</button>
+            <button class="tab" onclick="setTab(this,'edt')">Attendees</button>
+            <button class="tab" onclick="showAdminPage('checkin');setSidebarActive('checkin')">Agenda</button>
+            <button class="tab" onclick="setTab(this,'edt')">Sponsors</button>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;">Description</div>
+              <p style="font-size:13px;color:var(--gray);line-height:1.6;">An annual conference where technology leaders and innovators come together to share ideas and latest trends.</p>
+              <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">
+                <div><strong>Category:</strong> <span style="color:var(--gray);">Technology</span></div>
+                <div><strong>Organized by:</strong> <span style="color:var(--gray);">Tech Solutions Pty Ltd</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;">Quick Actions</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <button class="admin-btn-outline" onclick="alert('Share link copied!')">🔗 Share Event</button>
+                <button class="admin-btn-outline" onclick="showAdminPage('a-tickets');setSidebarActive('tickets')">📈 View Ticket Sales</button>
+                <button class="admin-btn-outline" onclick="alert('Exporting report as PDF...')">📄 Export Report</button>
+                <button style="background:none;border:1.5px solid var(--red);color:var(--red);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" onclick="alert('Are you sure you want to cancel this event?\n\nAll ticket holders will be notified.')">🗑 Cancel Event</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CREATE EVENT -->
+        <div id="ap-create-event" class="ap" style="display:none;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <button onclick="showAdminPage('events');setSidebarActive('events')" style="background:none;border:none;font-size:20px;cursor:pointer;">←</button>
+            <div style="font-size:12px;color:var(--gray);">Events › Create New Event</div>
+          </div>
+          <div class="two-col">
+            <div>
+              <div class="step-list">
+                <div class="step-item" onclick="setCreateStep(1)"><div class="step-num" id="snum1">1</div><span class="step-name">Basic Details</span></div>
+                <div class="step-item" onclick="setCreateStep(2)"><div class="step-num inactive" id="snum2">2</div><span class="step-name">Date & Venue</span></div>
+                <div class="step-item" onclick="setCreateStep(3)"><div class="step-num inactive" id="snum3">3</div><span class="step-name">Tickets</span></div>
+                <div class="step-item" onclick="setCreateStep(4)"><div class="step-num inactive" id="snum4">4</div><span class="step-name">Agenda</span></div>
+                <div class="step-item" onclick="setCreateStep(5)"><div class="step-num inactive" id="snum5">5</div><span class="step-name">Publish</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="card" id="create-step-1">
+                <div class="card-title" style="margin-bottom:16px;">Basic Details</div>
+                <div class="form-group"><label class="form-label">Event Name <span class="req">*</span></label><input class="form-input" placeholder="Enter event name" value="Tech Conference 2025"></div>
+                <div class="form-group"><label class="form-label">Category <span class="req">*</span></label><select class="form-select"><option>Select category</option><option selected>Conference</option><option>Music</option><option>Art</option><option>Business</option></select></div>
+                <div class="form-group"><label class="form-label">Description <span class="req">*</span></label><textarea class="form-textarea" placeholder="Tell people about your event...">An annual conference where technology leaders and innovators come together.</textarea></div>
+                <div class="form-group"><label class="form-label">Event Image</label>
+                  <div style="border:2px dashed var(--gray-light);border-radius:10px;padding:24px;text-align:center;cursor:pointer;background:var(--bg);" onclick="alert('File picker – upload event image (JPG, PNG, GIF. Max 5MB)')">
+                    <div style="font-size:28px;margin-bottom:6px;">🖼️</div>
+                    <div style="font-size:13px;color:var(--purple);font-weight:600;">Upload Image</div>
+                    <div style="font-size:11px;color:var(--gray);margin-top:4px;">JPG, PNG or GIF. Max size 5MB</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                  <button class="admin-btn-outline" onclick="showAdminPage('events');setSidebarActive('events')">Cancel</button>
+                  <button class="admin-btn" onclick="setCreateStep(2)">Next →</button>
+                </div>
+              </div>
+              <div class="card" id="create-step-2" style="display:none;">
+                <div class="card-title" style="margin-bottom:16px;">Date & Venue</div>
+                <div class="two-col" style="gap:12px;">
+                  <div class="form-group"><label class="form-label">Start Date <span class="req">*</span></label><input class="form-input" type="date" value="2025-05-20"></div>
+                  <div class="form-group"><label class="form-label">Start Time <span class="req">*</span></label><input class="form-input" type="time" value="09:00"></div>
+                  <div class="form-group"><label class="form-label">End Date <span class="req">*</span></label><input class="form-input" type="date" value="2025-05-22"></div>
+                  <div class="form-group"><label class="form-label">End Time <span class="req">*</span></label><input class="form-input" type="time" value="17:00"></div>
+                </div>
+                <div class="form-group"><label class="form-label">Time Zone</label><select class="form-select"><option selected>(GMT+10) Melbourne, Australia</option><option>(GMT+8) Perth</option><option>(GMT+0) London</option></select></div>
+                <div class="form-group"><label class="form-label">Venue Name <span class="req">*</span></label><input class="form-input" value="Melbourne Convention Centre"></div>
+                <div class="form-group"><label class="form-label">Address</label><input class="form-input" value="1 Convention Centre Pl, South Wharf VIC 3006"></div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                  <button class="admin-btn-outline" onclick="setCreateStep(1)">← Back</button>
+                  <button class="admin-btn" onclick="setCreateStep(3)">Next →</button>
+                </div>
+              </div>
+              <div class="card" id="create-step-3" style="display:none;">
+                <div class="card-title" style="margin-bottom:16px;">Ticket Information</div>
+                <div class="form-group"><label class="form-label">Currency</label><select class="form-select"><option>AUD – Australian Dollar</option><option>USD – US Dollar</option></select></div>
+                <div style="border:1px solid var(--gray-light);border-radius:10px;padding:12px;margin-bottom:12px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:center;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:8px;"><span>Type</span><span>Price</span><span>Qty</span><span></span></div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:center;margin-bottom:8px;">
+                    <input class="form-input" value="Early Bird" style="font-size:12px;">
+                    <input class="form-input" value="$49.00" style="font-size:12px;">
+                    <input class="form-input" value="200" style="font-size:12px;">
+                    <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;" onclick="alert('Ticket type removed')">🗑</button>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:center;margin-bottom:8px;">
+                    <input class="form-input" value="General Admission" style="font-size:12px;">
+                    <input class="form-input" value="$79.00" style="font-size:12px;">
+                    <input class="form-input" value="100" style="font-size:12px;">
+                    <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">🗑</button>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:center;">
+                    <input class="form-input" value="VIP" style="font-size:12px;">
+                    <input class="form-input" value="$149.00" style="font-size:12px;">
+                    <input class="form-input" value="100" style="font-size:12px;">
+                    <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">🗑</button>
+                  </div>
+                </div>
+                <button onclick="alert('New ticket type row added!')" style="background:none;border:1.5px dashed var(--purple);color:var(--purple);padding:8px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;width:100%;">+ Add Ticket Type</button>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                  <button class="admin-btn-outline" onclick="setCreateStep(2)">← Back</button>
+                  <button class="admin-btn" onclick="setCreateStep(4)">Next →</button>
+                </div>
+              </div>
+              <div class="card" id="create-step-4" style="display:none;">
+                <div class="card-title" style="margin-bottom:16px;">Agenda</div>
+                <div style="border:1px solid var(--gray-light);border-radius:10px;padding:12px;margin-bottom:12px;">
+                  <div style="font-size:12px;color:var(--gray);margin-bottom:8px;">May 20, 2025</div>
+                  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:12px;"><span>09:00</span><input class="form-input" value="Opening Keynote" style="font-size:12px;flex:1;"><input class="form-input" value="Main Hall" style="font-size:12px;width:100px;"></div>
+                  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:12px;"><span>10:30</span><input class="form-input" value="AI and the Future" style="font-size:12px;flex:1;"><input class="form-input" value="Main Hall" style="font-size:12px;width:100px;"></div>
+                  <button onclick="alert('Session added!')" style="background:none;border:1.5px dashed var(--purple);color:var(--purple);padding:6px;border-radius:8px;cursor:pointer;font-size:12px;width:100%;">+ Add Session</button>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                  <button class="admin-btn-outline" onclick="setCreateStep(3)">← Back</button>
+                  <button class="admin-btn" onclick="setCreateStep(5)">Next →</button>
+                </div>
+              </div>
+              <div class="card" id="create-step-5" style="display:none;">
+                <div class="card-title" style="margin-bottom:12px;">Publish Event</div>
+                <div style="background:var(--bg);border-radius:10px;padding:16px;margin-bottom:16px;">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:8px;">✅ Everything looks good!</div>
+                  <div style="font-size:12px;color:var(--gray);">• Tech Conference 2025<br>• May 20–22, 2025 · Melbourne Convention Centre<br>• 3 ticket types configured<br>• Agenda: 2 sessions added</div>
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <button class="admin-btn-outline" style="flex:1;" onclick="alert('Event saved as draft!')">Save as Draft</button>
+                  <button class="admin-btn" style="flex:1;" onclick="alert('🎉 Event Published!\n\nTech Conference 2025 is now live and visible to attendees.')">🚀 Publish Event</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TICKETS ADMIN -->
+        <div id="ap-a-tickets" class="ap" style="display:none;">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">All Transactions</span>
+              <button class="admin-btn" onclick="alert('Exporting transactions as CSV...')">⬇ Export</button>
+            </div>
+            <div class="tab-bar">
+              <button class="tab active" onclick="setTab(this,'txn')">All Transactions</button>
+              <button class="tab" onclick="setTab(this,'txn')">Successful</button>
+              <button class="tab" onclick="setTab(this,'txn')">Pending</button>
+              <button class="tab" onclick="setTab(this,'txn')">Failed</button>
+              <button class="tab" onclick="setTab(this,'txn')">Refunded</button>
+            </div>
+            <table>
+              <thead><tr><th>Transaction ID</th><th>Attendee</th><th>Event</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                <tr><td>TXN-0001248</td><td>John Smith</td><td>Tech Conference 2025</td><td>$149.00</td><td>VISA ····4242</td><td><span class="status-chip chip-green">Completed</span></td><td>May 20, 2025</td></tr>
+                <tr><td>TXN-0001247</td><td>Sarah Johnson</td><td>Music Fest 2025</td><td>$79.00</td><td>Mastercard ····5555</td><td><span class="status-chip chip-green">Completed</span></td><td>May 20, 2025</td></tr>
+                <tr><td>TXN-0001246</td><td>Michael Brown</td><td>Business Summit</td><td>$199.00</td><td>VISA ····4242</td><td><span class="status-chip chip-green">Completed</span></td><td>May 20, 2025</td></tr>
+                <tr><td>TXN-0001245</td><td>Emily Davis</td><td>Art Expo 2025</td><td>$35.00</td><td>PayPal</td><td><span class="status-chip chip-orange">Pending</span></td><td>May 20, 2025</td></tr>
+                <tr><td>TXN-0001244</td><td>David Wilson</td><td>Workshop 2025</td><td>$49.00</td><td>VISA ····4242</td><td><span class="status-chip chip-green">Completed</span></td><td>May 20, 2025</td></tr>
+                <tr><td>TXN-0001243</td><td>Jessica Taylor</td><td>Tech Conference 2025</td><td>$149.00</td><td>Amex ····1005</td><td><span class="status-chip chip-red">Failed</span></td><td>May 20, 2025</td></tr>
+                <tr><td>TXN-0001242</td><td>Chris Anderson</td><td>Music Fest 2025</td><td>$79.00</td><td>Mastercard ····5555</td><td><span class="status-chip" style="background:#f3f4f6;color:var(--gray);">Refunded</span></td><td>May 20, 2025</td></tr>
+              </tbody>
+            </table>
+            <div style="padding:12px 0 0;font-size:12px;color:var(--gray);display:flex;align-items:center;gap:6px;">
+              🔒 All payments are securely processed using industry-standard encryption. PCI DSS Compliant · 256-bit SSL Encrypted
+            </div>
+          </div>
+        </div>
+
+        <!-- ATTENDEES -->
+        <div id="ap-attendees" class="ap" style="display:none;">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">All Attendees (984)</span>
+              <div style="display:flex;gap:10px;"><input class="form-input" placeholder="Search attendees..." style="width:200px;"><button class="admin-btn" onclick="alert('Exporting attendee list...')">Export</button></div>
+            </div>
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Event</th><th>Ticket Type</th><th>Check-in</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;">SJ</div>Sarah Johnson</div></td><td>sarah.j@email.com</td><td>Tech Conference 2025</td><td><span class="ticket-chip chip-purple">General</span></td><td><span class="status-chip chip-green">✓ Checked In</span></td><td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;" onclick="alert('View Sarah Johnson profile')">View</button></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;background:#059669;">MB</div>Michael Brown</div></td><td>michael.b@email.com</td><td>Tech Conference 2025</td><td><span class="ticket-chip chip-orange">VIP</span></td><td><span class="status-chip chip-green">✓ Checked In</span></td><td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;">View</button></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;background:#d97706;">ED</div>Emily Davis</div></td><td>emily.d@email.com</td><td>Art Expo 2025</td><td><span class="ticket-chip chip-blue">Early Bird</span></td><td><span class="status-chip" style="background:#f3f4f6;color:var(--gray);">Not yet</span></td><td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;">View</button></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;background:#7c3aed;">DW</div>David Wilson</div></td><td>david.w@email.com</td><td>Music Fest 2025</td><td><span class="ticket-chip chip-purple">General</span></td><td><span class="status-chip" style="background:#f3f4f6;color:var(--gray);">Not yet</span></td><td><button class="admin-btn-outline" style="font-size:11px;padding:4px 10px;">View</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CHECK-IN -->
+        <div id="ap-checkin" class="ap" style="display:none;">
+          <div class="two-col">
+            <div>
+              <div class="card">
+                <div class="tab-bar">
+                  <button class="tab active" onclick="setTab(this,'ci')">Check-in (Scanner)</button>
+                  <button class="tab" onclick="setTab(this,'ci')">Manual Check-in</button>
+                </div>
+                <div class="checkin-scanner">
+                  <p style="font-size:13px;font-weight:600;margin-bottom:8px;">Scan Ticket QR Code</p>
+                  <p style="font-size:11px;color:var(--gray);">Align the QR code within the frame</p>
+                  <div class="qr-frame">📷</div>
+                  <button class="btn-purple" onclick="simulateCheckin()">Simulate Scan ✓</button>
+                </div>
+                <div class="success-banner" id="checkin-success" style="display:none;">
+                  ✅ <div><div style="font-weight:700;">Checked In Successfully</div><div style="font-weight:400;font-size:12px;">John Smith · VIP Ticket · May 20, 2025 9:15 AM</div></div>
+                </div>
+                <div style="padding:16px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-weight:600;font-size:14px;">Recent Check-ins</span><span class="view-all" onclick="showAdminPage('attendees')">View all</span></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-light);">
+                    <div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;">SJ</div><div><div style="font-size:12px;font-weight:600;">Sarah Johnson</div><div style="font-size:10px;color:var(--gray);">General Admission · 9:10 AM</div></div></div>
+                    <span class="status-chip chip-green">Checked In</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-light);">
+                    <div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;background:#059669;">MB</div><div><div style="font-size:12px;font-weight:600;">Michael Brown</div><div style="font-size:10px;color:var(--gray);">Early Bird · 9:08 AM</div></div></div>
+                    <span class="status-chip chip-green">Checked In</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-light);">
+                    <div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:11px;background:#d97706;">ED</div><div><div style="font-size:12px;font-weight:600;">Emily Davis</div><div style="font-size:10px;color:var(--gray);">General Admission · 9:06 AM</div></div></div>
+                    <span class="status-chip chip-green">Checked In</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-title" style="margin-bottom:12px;">Agenda & Sessions – May 20, 2025</div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);">
+                  <div style="font-size:12px;color:var(--gray);min-width:80px;">09:00 AM</div>
+                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--purple);">Opening Keynote</div><div style="font-size:11px;color:var(--gray);">Speaker: Dr. Alan Turing</div></div>
+                  <span class="room-chip chip-purple">Main Hall</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);">
+                  <div style="font-size:12px;color:var(--gray);min-width:80px;">10:30 AM</div>
+                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--accent);">AI and the Future</div><div style="font-size:11px;color:var(--gray);">Speaker: Jane Cooper</div></div>
+                  <span class="room-chip chip-blue">Room 1</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);">
+                  <div style="font-size:12px;color:var(--gray);min-width:80px;">12:00 PM</div>
+                  <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Lunch Break</div></div>
+                  <span class="room-chip chip-green">Networking</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);">
+                  <div style="font-size:12px;color:var(--gray);min-width:80px;">01:30 PM</div>
+                  <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Cloud Computing</div><div style="font-size:11px;color:var(--gray);">Speaker: Robert Fox</div></div>
+                  <span class="room-chip chip-blue">Room 2</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);">
+                  <div style="font-size:12px;color:var(--gray);min-width:80px;">03:00 PM</div>
+                  <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Panel Discussion</div><div style="font-size:11px;color:var(--gray);">Speaker: Multiple</div></div>
+                  <span class="room-chip chip-purple">Main Hall</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;">
+                  <div style="font-size:12px;color:var(--gray);min-width:80px;">04:30 PM</div>
+                  <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Closing Remarks</div><div style="font-size:11px;color:var(--gray);">Speaker: Organizer</div></div>
+                  <span class="room-chip chip-purple">Main Hall</span>
+                </div>
+                <button onclick="alert('Add new session dialog')" style="width:100%;margin-top:12px;background:none;border:1.5px dashed var(--purple);color:var(--purple);padding:8px;border-radius:8px;cursor:pointer;font-weight:600;">+ Add Session</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPORTS -->
+        <div id="ap-reports" class="ap" style="display:none;">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:16px;gap:10px;">
+            <select class="form-select" style="width:200px;">
+              <option>May 1 – May 31, 2025</option>
+              <option>Apr 1 – Apr 30, 2025</option>
+              <option>This Year</option>
+            </select>
+            <button class="admin-btn" onclick="alert('Exporting report as PDF...')">⬇ Export Report</button>
+          </div>
+          <div class="stat-grid" style="margin-bottom:20px;">
+            <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;">💰</div><div><div class="stat-val" style="font-size:18px;">$24,580</div><div class="stat-label">Total Revenue</div><div style="font-size:11px;color:var(--green);margin-top:2px;">↑ 16.4% vs last month</div></div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#d1fae5;">🎫</div><div><div class="stat-val" style="font-size:18px;">1,248</div><div class="stat-label">Tickets Sold</div><div style="font-size:11px;color:var(--green);margin-top:2px;">↑ 12.7% vs last month</div></div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;">👥</div><div><div class="stat-val" style="font-size:18px;">984</div><div class="stat-label">Total Attendees</div><div style="font-size:11px;color:var(--green);margin-top:2px;">↑ 15.3% vs last month</div></div></div>
+            <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;">💵</div><div><div class="stat-val" style="font-size:18px;">$45.52</div><div class="stat-label">Avg. Ticket Price</div><div style="font-size:11px;color:var(--red);margin-top:2px;">↓ 8.1% vs last month</div></div></div>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;">Revenue Over Time</div>
+              <div class="chart-placeholder" style="height:180px;">
+                <div class="chart-bar" style="height:30%;"></div>
+                <div class="chart-bar" style="height:45%;"></div>
+                <div class="chart-bar" style="height:60%;"></div>
+                <div class="chart-bar" style="height:50%;"></div>
+                <div class="chart-bar" style="height:75%;"></div>
+                <div class="chart-bar" style="height:70%;"></div>
+                <div class="chart-bar" style="height:88%;"></div>
+                <div class="chart-bar" style="height:95%;"></div>
+                <div class="chart-bar" style="height:80%;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray);padding:8px 4px 0;"><span>May 1</span><span>May 8</span><span>May 15</span><span>May 22</span><span>May 29</span></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;">Tickets by Type</div>
+              <div style="display:flex;align-items:center;gap:20px;">
+                <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--purple) 0% 26%,var(--accent) 26% 46%,var(--orange) 46% 62%,var(--green) 62% 73%,var(--blue) 73% 90%,var(--gray-light) 90% 100%);flex-shrink:0;"></div>
+                <div style="font-size:11px;display:flex;flex-direction:column;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--purple);"></div>Early Bird – 26%</div>
+                  <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent);"></div>General – 20%</div>
+                  <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--orange);"></div>VIP – 16%</div>
+                  <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--green);"></div>Student – 11%</div>
+                  <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:2px;background:var(--blue);"></div>Other – 17%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Top Performing Events</span></div>
+            <table>
+              <thead><tr><th>Event</th><th>Date</th><th>Revenue</th><th>Tickets Sold</th><th>Attendees</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Tech Conference 2025</strong></td><td>May 20, 2025</td><td style="color:var(--green);font-weight:600;">$18,960</td><td>632</td><td>512</td></tr>
+                <tr><td><strong>Music Fest 2025</strong></td><td>Jun 15, 2025</td><td style="color:var(--green);font-weight:600;">$5,420</td><td>320</td><td>278</td></tr>
+                <tr><td><strong>Business Summit</strong></td><td>Jul 10, 2025</td><td style="color:var(--green);font-weight:600;">$4,220</td><td>220</td><td>194</td></tr>
+                <tr><td><strong>Art Expo 2025</strong></td><td>Jul 5, 2025</td><td style="color:var(--green);font-weight:600;">$1,600</td><td>145</td><td>126</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CALENDAR -->
+        <div id="ap-a-calendar" class="ap" style="display:none;">
+          <div class="two-col">
+            <div class="card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <button style="background:none;border:none;cursor:pointer;font-size:18px;" onclick="alert('Previous month')">‹</button>
+                <span style="font-family:'Sora',sans-serif;font-weight:700;">May 2025</span>
+                <button style="background:none;border:none;cursor:pointer;font-size:18px;" onclick="alert('Next month')">›</button>
+              </div>
+              <div class="cal-grid">
+                <div class="cal-header-day">Sun</div><div class="cal-header-day">Mon</div><div class="cal-header-day">Tue</div><div class="cal-header-day">Wed</div><div class="cal-header-day">Thu</div><div class="cal-header-day">Fri</div><div class="cal-header-day">Sat</div>
+                <div></div><div></div><div></div><div></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div>
+                <div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day has-event" onclick="alert('Tech Conference 2025 – May 9')">9</div><div class="cal-day">10</div>
+                <div class="cal-day">11</div><div class="cal-day">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day">16</div><div class="cal-day today">17</div>
+                <div class="cal-day">18</div><div class="cal-day">19</div><div class="cal-day has-event" onclick="alert('Tech Conference 2025 – Day 1')">20</div><div class="cal-day has-event" onclick="alert('Tech Conference 2025 – Day 2')">21</div><div class="cal-day has-event" onclick="alert('Tech Conference 2025 – Day 3')">22</div><div class="cal-day">23</div><div class="cal-day">24</div>
+                <div class="cal-day">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day has-event" onclick="alert('Workshop 2025')">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;">Upcoming Events</div>
+              <div class="upcoming-event-item" onclick="showAdminPage('event-detail-admin');setSidebarActive('events')">
+                <div class="upcoming-thumb">🎤</div>
+                <div><h4>Tech Conference 2025</h4><p>📅 May 20, 2025 · 09:00 AM · Melbourne</p><span class="status-chip chip-green" style="margin-top:4px;display:inline-block;">Published</span></div>
+              </div>
+              <div class="upcoming-event-item">
+                <div class="upcoming-thumb" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);">🎵</div>
+                <div><h4>Music Fest 2025</h4><p>📅 Jun 13, 2025 · 05:00 PM · Sydney</p><span class="status-chip chip-orange" style="margin-top:4px;display:inline-block;">Draft</span></div>
+              </div>
+              <div class="upcoming-event-item">
+                <div class="upcoming-thumb" style="background:linear-gradient(135deg,#1a3a1a,#166534);">📊</div>
+                <div><h4>Business Summit</h4><p>📅 Jul 10, 2025 · 09:00 AM · Sydney</p><span class="status-chip chip-green" style="margin-top:4px;display:inline-block;">Published</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MARKETING -->
+        <div id="ap-marketing" class="ap" style="display:none;">
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+              <span class="card-title">Email Campaigns</span>
+              <button class="admin-btn" onclick="alert('Create Campaign wizard opened')">+ Create Campaign</button>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;">📧</div><div><div class="stat-val" style="font-size:18px;">12</div><div class="stat-label">Total Campaigns</div></div></div>
+              <div class="stat-card"><div class="stat-icon" style="background:#d1fae5;">📨</div><div><div class="stat-val" style="font-size:18px;">8,524</div><div class="stat-label">Emails Sent</div></div></div>
+              <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;">📈</div><div><div class="stat-val" style="font-size:18px;">42.6%</div><div class="stat-label">Avg. Open Rate</div></div></div>
+              <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;">🖱️</div><div><div class="stat-val" style="font-size:18px;">15.3%</div><div class="stat-label">Avg. Click Rate</div></div></div>
+            </div>
+            <table style="margin-top:16px;">
+              <thead><tr><th>Campaign Name</th><th>Event</th><th>Sent On</th><th>Recipients</th><th>Open Rate</th><th>Click Rate</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Tech Conference 2025 Invitation</td><td>Tech Conf 2025</td><td>May 5, 2025</td><td>2,350</td><td>48.7%</td><td>16.2%</td><td><span class="status-chip chip-green">Sent</span></td></tr>
+                <tr><td>Early Bird Offer</td><td>Music Fest 2025</td><td>Apr 20, 2025</td><td>3,124</td><td>41.1%</td><td>14.8%</td><td><span class="status-chip chip-green">Sent</span></td></tr>
+                <tr><td>Business Summit Reminder</td><td>Business Summit</td><td>Apr 20, 2025</td><td>1,856</td><td>38.9%</td><td>12.7%</td><td><span class="status-chip chip-green">Sent</span></td></tr>
+                <tr><td>Workshop Registration Open</td><td>Workshop 2025</td><td>Apr 10, 2025</td><td>1,245</td><td>36.5%</td><td>11.3%</td><td><span class="status-chip chip-blue">Scheduled</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="ap-a-settings" class="ap" style="display:none;">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:16px;">Account Settings</div>
+              <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" value="Emma Johnson"></div>
+              <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" type="email" value="emma@techsolutions.com"></div>
+              <div class="form-group"><label class="form-label">Organisation</label><input class="form-input" value="Tech Solutions Pty Ltd"></div>
+              <div class="form-group"><label class="form-label">Phone</label><input class="form-input" value="+61 400 000 000"></div>
+              <button class="admin-btn" onclick="alert('Profile saved!')">Save Changes</button>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:16px;">Notifications</div>
+              <div style="display:flex;flex-direction:column;gap:14px;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>New ticket purchase</span>
+                  <label style="cursor:pointer;"><input type="checkbox" checked> On</label>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>Check-in notifications</span>
+                  <label style="cursor:pointer;"><input type="checkbox" checked> On</label>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>Weekly reports</span>
+                  <label style="cursor:pointer;"><input type="checkbox"> Off</label>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>Marketing emails</span>
+                  <label style="cursor:pointer;"><input type="checkbox" checked> On</label>
+                </div>
+              </div>
+              <button class="admin-btn" style="margin-top:16px;" onclick="alert('Notification settings saved!')">Save</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px;">
+            <div class="card-title" style="margin-bottom:16px;">Danger Zone</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button style="background:none;border:1.5px solid var(--orange);color:var(--orange);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" onclick="alert('Password change email sent!')">Change Password</button>
+              <button style="background:none;border:1.5px solid var(--red);color:var(--red);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" onclick="alert('Are you sure you want to delete your account?\n\nThis action cannot be undone.')">Delete Account</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end admin-pages -->
+    </div><!-- end admin-main -->
+  </div><!-- end admin-shell -->
+</div>
+
+<script>
+// ---- Role Switching ----
+function switchRole(role) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-'+role).classList.add('active');
+  const idx = {attendee:0,admin:1,login:2}[role];
+  document.querySelectorAll('.role-btn')[idx].classList.add('active');
+}
+
+// ---- Mobile Pages ----
+function showMobPage(page) {
+  document.querySelectorAll('.mob-page').forEach(p => p.style.display='none');
+  const el = document.getElementById('mob-'+page);
+  if(el) el.style.display='block';
+  const titles = {
+    'home':'EventPro','events-list':'Events','event-detail':'Event Details',
+    'event-detail2':'Event Details','event-detail3':'Event Details',
+    'tickets':'My Tickets','ticket-detail':'Ticket Details',
+    'agenda':'Agenda','profile':'Profile','notifications':'Notifications'
+  };
+  document.getElementById('mob-title').textContent = titles[page]||'EventPro';
+  if(['event-detail','event-detail2','event-detail3','ticket-detail'].includes(page)){
+    document.getElementById('mob-topbar').style.background='transparent';
+    document.getElementById('mob-topbar').style.position='absolute';
+    document.getElementById('mob-topbar').style.width='100%';
+    document.getElementById('mob-topbar').style.zIndex='10';
+  } else {
+    document.getElementById('mob-topbar').style.background='var(--purple)';
+    document.getElementById('mob-topbar').style.position='';
+    document.getElementById('mob-topbar').style.zIndex='';
+  }
+}
+
+function setMobNav(page) {
+  document.querySelectorAll('.mob-nav-item').forEach(b=>b.classList.remove('active'));
+  const el = document.getElementById('mob-nav-'+page);
+  if(el) el.classList.add('active');
+}
+
+function switchTicketTab(tab) {
+  document.getElementById('tickets-upcoming').style.display = tab==='upcoming'?'block':'none';
+  document.getElementById('tickets-past').style.display = tab==='past'?'block':'none';
+  document.getElementById('tab-upcoming').className = 'tab'+(tab==='upcoming'?' active':'');
+  document.getElementById('tab-past').className = 'tab'+(tab==='past'?' active':'');
+}
+
+function switchDayTab(day, btn) {
+  document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  [0,1,2].forEach(d => {
+    const el = document.getElementById('agenda-day-'+d);
+    if(el) el.style.display = d===day?'block':'none';
+  });
+}
+
+// ---- Admin Pages ----
+function showAdminPage(page) {
+  document.querySelectorAll('.ap').forEach(p => p.style.display='none');
+  const el = document.getElementById('ap-'+page);
+  if(el) el.style.display='block';
+  const titles = {
+    'dashboard':'Dashboard','events':'Events','event-detail-admin':'Event Details',
+    'create-event':'Create New Event','a-tickets':'Tickets & Transactions',
+    'attendees':'Attendees','checkin':'Check-in','reports':'Reports & Analytics',
+    'a-calendar':'Calendar','marketing':'Marketing','a-settings':'Settings'
+  };
+  document.getElementById('admin-page-title').textContent = titles[page]||'Dashboard';
+}
+
+function setSidebarActive(page) {
+  document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
+  const el = document.getElementById('sl-'+page);
+  if(el) el.classList.add('active');
+}
+
+// ---- Create Event Steps ----
+function setCreateStep(n) {
+  [1,2,3,4,5].forEach(i => {
+    document.getElementById('create-step-'+i).style.display = i===n?'block':'none';
+    const snum = document.getElementById('snum'+i);
+    snum.className = i<=n?'step-num':'step-num inactive';
+  });
+}
+
+// ---- General Tab switching ----
+function setTab(btn, group) {
+  btn.closest('.tab-bar').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ---- Check-in simulation ----
+function simulateCheckin() {
+  const s = document.getElementById('checkin-success');
+  s.style.display='flex';
+  setTimeout(()=>s.style.display='none', 4000);
+}
+
+// ---- Login ----
+function doLogin() {
+  switchRole('admin');
+}
+
+function togglePass() {
+  const p = document.getElementById('pass-input');
+  p.type = p.type==='password'?'text':'password';
+}
+</script>
+</body>
+</html>
